@@ -1,3 +1,5 @@
+// Package pytemplate contains implementation of Python-like template, which allow to substitute variables (defined with dollar $) dynamically,
+// using provided mappings.
 package pytemplate
 
 import (
@@ -19,6 +21,7 @@ var (
 	invalidIdx = pattern.SubexpIndex("invalid")
 )
 
+// SubstitutionFailedError indicated that substitution of variable Variable failed (e.g., because there is no matching mapping)
 type SubstitutionFailedError struct {
 	Variable string
 }
@@ -35,10 +38,12 @@ func (e *SubstitutionFailedError) Is(err error) bool {
 	return e.Variable == sfe.Variable
 }
 
+// Template represents template string, containing variables to substitute.
 type Template struct {
 	parts []templatePart
 }
 
+// New builds Template using provided template string as base.
 func New(template string) (*Template, error) {
 	parts, err := parseTemplate(template)
 	if err != nil {
@@ -96,6 +101,8 @@ func parseTemplate(template string) ([]templatePart, error) {
 	return parts, nil
 }
 
+// Substitute substitutes variables in Template, using mappings provided via options.
+// If there is no matching mapping for a variable, a SubstitutionFailedError is returned.
 func (t *Template) Substitute(opts ...SubstituteOption) (string, error) {
 	var so substituteOptions
 
@@ -126,6 +133,8 @@ func (t *Template) Substitute(opts ...SubstituteOption) (string, error) {
 	return sb.String(), nil
 }
 
+// SafeSubstitute is similar to Substitute, but with preapplied WithSafeSubstitution
+// option, meaning there won't be any error.
 func (t *Template) SafeSubstitute(opts ...SubstituteOption) string {
 	result, _ := t.Substitute(append(opts, WithSafeSubstitution())...)
 	return result
